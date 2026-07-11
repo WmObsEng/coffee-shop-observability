@@ -1,0 +1,110 @@
+---
+zabbixImageTag: ubuntu-7.0.23
+
+postgresAccess:
+  existingSecretName: zabbix-postgres-access
+  secretHostKey: host
+  secretPortKey: port
+  secretUserKey: user
+  secretPasswordKey: password
+  secretDBKey: dbname
+
+zabbixServer:
+  enabled: true
+
+  zabbixServerHA:
+    enabled: false
+
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 700m
+      memory: 768Mi
+
+  service:
+    type: NodePort
+    port: 10051
+    nodePort: 31051
+
+  extraEnv:
+    - name: ZBX_TIMEOUT
+      value: "10"
+    - name: ZBX_STARTPINGERS
+      value: "5"
+    - name: ZBX_STARTPOLLERS
+      value: "5"
+
+  nodeSelector:
+    workload: zabbix
+
+postgresql:
+  enabled: true
+
+  image:
+    repository: postgres
+    tag: "16"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+
+  persistence:
+    enabled: true
+    storageSize: 1Gi
+    storageClass: local-path
+
+  extraRuntimeParameters:
+    max_connections: 100
+    shared_buffers: 128MB
+
+  nodeSelector:
+    workload: zabbix
+
+zabbixAgent:
+  enabled: false
+  runAsSidecar: false
+  runAsDaemonSet: false
+
+zabbixWeb:
+  enabled: true
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 384Mi
+
+  service:
+    type: NodePort
+    port: 80
+    nodePort: 31080
+
+  extraEnv:
+    - name: ZBX_SERVER_NAME
+      value: "4Linux Observability Lab"
+    - name: PHP_TZ
+      value: "America/Sao_Paulo"
+
+  nodeSelector:
+    workload: zabbix
+
+zabbixWebService:
+  enabled: false
+
+zabbixJavaGateway:
+  enabled: false
+
+zabbixProxy:
+  enabled: false

@@ -42,7 +42,7 @@
       ansible.builtin.lineinfile:
         path: /etc/zabbix/zabbix_agent2.conf
         regexp: '^ServerActive='
-        line: "ServerActive={{ zabbix_server_ip }}"
+        line: "ServerActive={{ zabbix_server_ip }}:31051"
       notify: Reiniciar Zabbix Agent 2
 
     - name: Configurar hostname igual ao inventário
