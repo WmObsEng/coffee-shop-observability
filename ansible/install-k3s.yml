@@ -1,0 +1,93 @@
+---
+- name: Instalar k3s server no node-01
+  hosts: k3s_server
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Verificar instalação existente do k3s server
+      ansible.builtin.stat:
+        path: /usr/local/bin/k3s
+      register: k3s_server_binary
+
+    - name: Instalar k3s server
+      ansible.builtin.shell: |
+        curl -sfL https://get.k3s.io | \
+        INSTALL_K3S_EXEC="server \
+        --node-ip=10.128.15.237 \
+        --advertise-address=10.128.15.237 \
+        --tls-san=35.255.20.112 \
+        --write-kubeconfig-mode=644" sh -
+      args:
+        executable: /bin/bash
+      when: not k3s_server_binary.stat.exists
+
+    - name: Garantir serviço k3s ativo
+      ansible.builtin.service:
+        name: k3s
+        state: started
+        enabled: true
+
+    - name: Aguardar API Kubernetes
+      ansible.builtin.wait_for:
+        host: 10.128.15.237
+        port: 6443
+        delay: 5
+        timeout: 180
+
+    - name: Ler token do cluster
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: k3s_token_raw
+
+    - name: Disponibilizar token aos outros hosts
+      ansible.builtin.set_fact:
+        k3s_token: "{{ k3s_token_raw.content | b64decode | trim }}"
+
+    - name: Criar diretório kubeconfig para suporte
+      ansible.builtin.file:
+        path: /home/suporte/.kube
+        state: directory
+        owner: suporte
+        group: suporte
+        mode: "0700"
+
+    - name: Copiar kubeconfig para suporte
+      ansible.builtin.copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: /home/suporte/.kube/config
+        remote_src: true
+        owner: suporte
+        group: suporte
+        mode: "0600"
+
+- name: Instalar k3s agents nos workers
+  hosts: k3s_agents
+  become: true
+  gather_facts: true
+
+  vars:
+    k3s_server_url: "https://10.128.15.237:6443"
+    k3s_token: "{{ hostvars['node-01']['k3s_token'] }}"
+
+  tasks:
+    - name: Verificar instalação existente do k3s agent
+      ansible.builtin.stat:
+        path: /usr/local/bin/k3s
+      register: k3s_agent_binary
+
+    - name: Instalar k3s agent
+      ansible.builtin.shell: |
+        curl -sfL https://get.k3s.io | \
+        K3S_URL="{{ k3s_server_url }}" \
+        K3S_TOKEN="{{ k3s_token }}" \
+        INSTALL_K3S_EXEC="agent --node-ip={{ ansible_host }}" sh -
+      args:
+        executable: /bin/bash
+      when: not k3s_agent_binary.stat.exists
+
+    - name: Garantir serviço k3s-agent ativo
+      ansible.builtin.service:
+        name: k3s-agent
+        state: started
+        enabled: true
