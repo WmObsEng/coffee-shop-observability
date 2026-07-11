@@ -35,7 +35,7 @@
       ansible.builtin.lineinfile:
         path: /etc/zabbix/zabbix_agent2.conf
         regexp: '^Server='
-        line: "Server={{ zabbix_server_ip }},10.42.0.0/16,10.43.0.0/16"
+        line: "Server=10.128.15.0/24,10.42.0.0/16,10.43.0.0/16"
       notify: Reiniciar Zabbix Agent 2
 
     - name: Configurar servidor para verificações ativas
