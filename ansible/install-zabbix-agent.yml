@@ -1,0 +1,81 @@
+---
+- name: Instalar e preparar Zabbix Agent 2
+  hosts: k3s_cluster
+  become: true
+  gather_facts: true
+
+  vars:
+    zabbix_repository_package: "zabbix-release_7.0-1+debian12_all.deb"
+    zabbix_repository_url: "https://repo.zabbix.com/zabbix/7.0/debian/pool/main/z/zabbix-release/zabbix-release_7.0-1+debian12_all.deb"
+    zabbix_server_ip: "10.128.15.237"
+
+  tasks:
+    - name: Baixar pacote do repositório oficial Zabbix
+      ansible.builtin.get_url:
+        url: "{{ zabbix_repository_url }}"
+        dest: "/tmp/{{ zabbix_repository_package }}"
+        mode: "0644"
+
+    - name: Instalar repositório oficial Zabbix
+      ansible.builtin.apt:
+        deb: "/tmp/{{ zabbix_repository_package }}"
+        state: present
+
+    - name: Atualizar cache APT
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Instalar Zabbix Agent 2
+      ansible.builtin.apt:
+        name: zabbix-agent2
+        state: present
+
+    - name: Configurar servidores permitidos
+      ansible.builtin.lineinfile:
+        path: /etc/zabbix/zabbix_agent2.conf
+        regexp: '^Server='
+        line: "Server={{ zabbix_server_ip }},10.42.0.0/16,10.43.0.0/16"
+      notify: Reiniciar Zabbix Agent 2
+
+    - name: Configurar servidor para verificações ativas
+      ansible.builtin.lineinfile:
+        path: /etc/zabbix/zabbix_agent2.conf
+        regexp: '^ServerActive='
+        line: "ServerActive={{ zabbix_server_ip }}"
+      notify: Reiniciar Zabbix Agent 2
+
+    - name: Configurar hostname igual ao inventário
+      ansible.builtin.lineinfile:
+        path: /etc/zabbix/zabbix_agent2.conf
+        regexp: '^Hostname='
+        line: "Hostname={{ inventory_hostname }}"
+      notify: Reiniciar Zabbix Agent 2
+
+    - name: Adicionar metadado para autoregistro
+      ansible.builtin.lineinfile:
+        path: /etc/zabbix/zabbix_agent2.conf
+        regexp: '^#?HostMetadata='
+        line: "HostMetadata=linux-k3s-node"
+      notify: Reiniciar Zabbix Agent 2
+
+    - name: Garantir serviço Zabbix Agent 2 habilitado
+      ansible.builtin.service:
+        name: zabbix-agent2
+        state: started
+        enabled: true
+
+    - name: Aplicar handlers antes da validação
+      ansible.builtin.meta: flush_handlers
+
+    - name: Aguardar porta do agente
+      ansible.builtin.wait_for:
+        port: 10050
+        host: "0.0.0.0"
+        timeout: 30
+
+  handlers:
+    - name: Reiniciar Zabbix Agent 2
+      ansible.builtin.service:
+        name: zabbix-agent2
+        state: restarted
