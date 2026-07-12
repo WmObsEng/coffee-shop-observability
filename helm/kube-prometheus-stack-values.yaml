@@ -1,6 +1,9 @@
 grafana:
   enabled: true
   adminPassword: admin123
+  plugins:
+    - alexanderzobnin-zabbix-app
+    - grafana-opensearch-datasource
   service:
     type: NodePort
     nodePort: 30300
