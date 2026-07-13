@@ -1,4 +1,4 @@
-name: Build and Publish Coffee Shop
+name: Build, Publish and Deploy Coffee Shop
 
 on:
   push:
@@ -14,6 +14,7 @@ jobs:
   build:
     name: Build and publish container image
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     permissions:
       contents: read
@@ -40,7 +41,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=main
-            type=sha,prefix=sha-
+            type=sha,format=long,prefix=sha-
 
       - name: Build and publish image
         uses: docker/build-push-action@v6
@@ -52,3 +53,117 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to k3s
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy Coffee Shop
+        shell: bash
+        env:
+          K3S_HOST: ${{ secrets.K3S_HOST }}
+          K3S_USER: ${{ secrets.K3S_USER }}
+          K3S_SSH_KEY: ${{ secrets.K3S_SSH_KEY }}
+          K3S_KNOWN_HOSTS: ${{ secrets.K3S_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+
+          for variable in K3S_HOST K3S_USER K3S_SSH_KEY K3S_KNOWN_HOSTS; do
+            if [[ -z "${!variable:-}" ]]; then
+              echo "::error::Required secret ${variable} is empty."
+              exit 1
+            fi
+          done
+
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+
+          printf '%s' "$K3S_SSH_KEY" \
+            | tr -d '\r' \
+            > "$HOME/.ssh/k3s_key"
+
+          printf '%s\n' "$K3S_KNOWN_HOSTS" \
+            | tr -d '\r' \
+            > "$HOME/.ssh/known_hosts"
+
+          chmod 600 "$HOME/.ssh/k3s_key"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+          DEPLOY_IMAGE="${REGISTRY}/${IMAGE_NAME}:sha-${GITHUB_SHA}"
+          MANIFEST_DIR="kubernetes/coffee-shop"
+          REMOTE_DIR="/tmp/coffee-shop-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          SSH_TARGET="${K3S_USER}@${K3S_HOST}"
+
+          sed -i -E \
+            "s#^([[:space:]]*image:).*#\1 ${DEPLOY_IMAGE}#" \
+            "${MANIFEST_DIR}/deployment.yaml"
+
+          if ! grep -Fq "image: ${DEPLOY_IMAGE}" "${MANIFEST_DIR}/deployment.yaml"; then
+            echo "::error::Unable to update the deployment image."
+            exit 1
+          fi
+
+          SSH_OPTIONS=(
+            -i "$HOME/.ssh/k3s_key"
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
+            -o ConnectTimeout=15
+          )
+
+          ssh "${SSH_OPTIONS[@]}" "$SSH_TARGET" \
+            "rm -rf -- '$REMOTE_DIR' && mkdir -p -- '$REMOTE_DIR'"
+
+          scp "${SSH_OPTIONS[@]}" -r \
+            "${MANIFEST_DIR}/." \
+            "${SSH_TARGET}:${REMOTE_DIR}/"
+
+          ssh "${SSH_OPTIONS[@]}" "$SSH_TARGET" \
+            "bash -s -- '$REMOTE_DIR' '$DEPLOY_IMAGE'" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          MANIFEST_DIR="$1"
+          EXPECTED_IMAGE="$2"
+
+          cleanup() {
+            rm -rf -- "$MANIFEST_DIR"
+          }
+          trap cleanup EXIT
+
+          kubectl apply -k "$MANIFEST_DIR"
+
+          kubectl rollout status deployment/coffee-shop \
+            -n coffee-shop \
+            --timeout=5m
+
+          CURRENT_IMAGE="$(
+            kubectl get deployment coffee-shop \
+              -n coffee-shop \
+              -o jsonpath='{.spec.template.spec.containers[0].image}'
+          )"
+
+          if [[ "$CURRENT_IMAGE" != "$EXPECTED_IMAGE" ]]; then
+            echo "Expected image: $EXPECTED_IMAGE"
+            echo "Current image:  $CURRENT_IMAGE"
+            exit 1
+          fi
+
+          kubectl get deployment coffee-shop -n coffee-shop
+
+          kubectl get pods \
+            -n coffee-shop \
+            -l app.kubernetes.io/name=coffee-shop \
+            -o wide
+
+          echo "Deployment completed with image: $CURRENT_IMAGE"
+          REMOTE_SCRIPT
