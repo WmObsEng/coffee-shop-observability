@@ -233,4 +233,10 @@ Como melhorias futuras, recomenda-se:
 
 A imagem abaixo apresenta o dashboard consolidado no Grafana.
 
-![Dashboard Coffee Shop Observability](docs/images/coffee-shop-observability-dashboard.png)
+### Visão geral do ambiente
+
+![Coffee Shop Observability - Visão Geral](docs/images/coffee-shop-observability-overview.png)
+
+### Logs e eventos dos nós Kubernetes
+
+![Coffee Shop Observability - Logs e Eventos](docs/images/coffee-shop-observability-logs.png)

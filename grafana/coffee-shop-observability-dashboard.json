@@ -4,19 +4,19 @@
   "metadata": {
     "name": "adlrhgk",
     "namespace": "default",
-    "uid": "fe73d639-e23a-42c7-9037-57401c8be715",
-    "resourceVersion": "1783833821758988",
-    "generation": 12,
-    "creationTimestamp": "2026-07-12T01:31:54Z",
+    "uid": "ce007e60-abb6-4f7c-b79f-b507d56ccb41",
+    "resourceVersion": "1783960551581999",
+    "generation": 14,
+    "creationTimestamp": "2026-07-12T23:39:11Z",
     "labels": {
-      "grafana.app/deprecatedInternalID": "4461483364114432"
+      "grafana.app/deprecatedInternalID": "291905297645568"
     },
     "annotations": {
-      "grafana.app/createdBy": "user:ffru6vbnhz1moe",
+      "grafana.app/createdBy": "user:efrvw9co4rjlsc",
       "grafana.app/folder": "",
       "grafana.app/saved-from-ui": "Grafana v13.1.0 (b309c9bb3b)",
-      "grafana.app/updatedBy": "user:ffru6vbnhz1moe",
-      "grafana.app/updatedTimestamp": "2026-07-12T05:23:41Z"
+      "grafana.app/updatedBy": "user:efrvw9co4rjlsc",
+      "grafana.app/updatedTimestamp": "2026-07-13T16:35:51Z"
     }
   },
   "spec": {
@@ -130,6 +130,318 @@
           }
         }
       },
+      "panel-10": {
+        "kind": "Panel",
+        "spec": {
+          "id": 10,
+          "title": "Eventos Recentes do k3s",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-opensearch-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "ffrzzn4tlyps0b"
+                      },
+                      "spec": {
+                        "alias": "",
+                        "bucketAggs": [
+                          {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "settings": {
+                              "interval": "auto"
+                            },
+                            "type": "date_histogram"
+                          }
+                        ],
+                        "format": "table",
+                        "luceneQueryType": "Logs",
+                        "metrics": [
+                          {
+                            "id": "1",
+                            "type": "logs"
+                          }
+                        ],
+                        "query": "*",
+                        "queryType": "lucene",
+                        "timeField": "@timestamp"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "logs",
+            "version": "13.1.0",
+            "spec": {
+              "options": {
+                "dedupStrategy": "none",
+                "displayedFields": [
+                  "message"
+                ],
+                "enableInfiniteScrolling": false,
+                "enableLogDetails": true,
+                "prettifyLogMessage": false,
+                "showControls": false,
+                "showFieldSelector": true,
+                "showLabels": false,
+                "showLevel": true,
+                "showTime": true,
+                "sortOrder": "Ascending",
+                "timestampResolution": "ms",
+                "unwrappedColumns": false,
+                "wrapLogMessage": true
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-11": {
+        "kind": "Panel",
+        "spec": {
+          "id": 11,
+          "title": "Erros e Alertas dos Nós",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-opensearch-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "ffrzzn4tlyps0b"
+                      },
+                      "spec": {
+                        "alias": "",
+                        "bucketAggs": [
+                          {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "settings": {
+                              "interval": "auto"
+                            },
+                            "type": "date_histogram"
+                          }
+                        ],
+                        "format": "table",
+                        "luceneQueryType": "Logs",
+                        "metrics": [
+                          {
+                            "id": "1",
+                            "type": "logs"
+                          }
+                        ],
+                        "query": "message:(error OR failed OR failure OR warning OR insufficient OR \"disk space\")",
+                        "queryType": "lucene",
+                        "timeField": "@timestamp"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "logs",
+            "version": "13.1.0",
+            "spec": {
+              "options": {
+                "dedupStrategy": "none",
+                "displayedFields": [
+                  "message"
+                ],
+                "enableInfiniteScrolling": false,
+                "enableLogDetails": true,
+                "prettifyLogMessage": false,
+                "showControls": false,
+                "showFieldSelector": true,
+                "showLabels": false,
+                "showLevel": true,
+                "showTime": true,
+                "sortOrder": "Ascending",
+                "timestampResolution": "ms",
+                "unwrappedColumns": false,
+                "wrapLogMessage": true
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-12": {
+        "kind": "Panel",
+        "spec": {
+          "id": 12,
+          "title": "Quantidade de Logs por Nó",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-opensearch-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "ffrzzn4tlyps0b"
+                      },
+                      "spec": {
+                        "alias": "",
+                        "bucketAggs": [
+                          {
+                            "field": "node_name.keyword",
+                            "id": "2",
+                            "settings": {
+                              "execution_hint": "map",
+                              "min_doc_count": "1",
+                              "order": "desc",
+                              "orderBy": "1",
+                              "size": "10"
+                            },
+                            "type": "terms"
+                          }
+                        ],
+                        "format": "table",
+                        "luceneQueryType": "Metric",
+                        "metrics": [
+                          {
+                            "id": "1",
+                            "type": "count"
+                          }
+                        ],
+                        "query": "*",
+                        "queryType": "lucene",
+                        "timeField": "@timestamp"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "seriesToRows",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "sortBy",
+                  "spec": {
+                    "options": {
+                      "fields": {},
+                      "sort": [
+                        {
+                          "field": "Count"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "13.1.0",
+            "spec": {
+              "options": {
+                "displayMode": "basic",
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "overflow": "ellipsis",
+                  "placement": "bottom",
+                  "showLegend": false
+                },
+                "maxVizHeight": 300,
+                "minVizHeight": 16,
+                "minVizWidth": 8,
+                "namePlacement": "auto",
+                "orientation": "vertical",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": true
+                },
+                "showUnfilled": true,
+                "sizing": "auto",
+                "valueMode": "text"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "percentage",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 60,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
       "panel-2": {
         "kind": "Panel",
         "spec": {
@@ -233,7 +545,7 @@
                       "group": "alexanderzobnin-zabbix-datasource",
                       "version": "v0",
                       "datasource": {
-                        "name": "bfru7ft1mvzlsa"
+                        "name": "efrxnl2vug0e8a"
                       },
                       "spec": {
                         "application": {
@@ -347,7 +659,8 @@
                     ]
                   },
                   "color": {
-                    "mode": "thresholds"
+                    "mode": "thresholds",
+                    "fixedColor": "#ad46ff"
                   }
                 },
                 "overrides": []
@@ -375,7 +688,7 @@
                       "group": "alexanderzobnin-zabbix-datasource",
                       "version": "v0",
                       "datasource": {
-                        "name": "bfru7ft1mvzlsa"
+                        "name": "efrxnl2vug0e8a"
                       },
                       "spec": {
                         "application": {
@@ -517,7 +830,7 @@
                       "group": "alexanderzobnin-zabbix-datasource",
                       "version": "v0",
                       "datasource": {
-                        "name": "bfru7ft1mvzlsa"
+                        "name": "efrxnl2vug0e8a"
                       },
                       "spec": {
                         "application": {
@@ -659,7 +972,7 @@
                       "group": "alexanderzobnin-zabbix-datasource",
                       "version": "v0",
                       "datasource": {
-                        "name": "bfru7ft1mvzlsa"
+                        "name": "efrxnl2vug0e8a"
                       },
                       "spec": {
                         "application": {
@@ -674,7 +987,6 @@
                         "host": {
                           "filter": "/.*/"
                         },
-                        "hostTags": [],
                         "item": {
                           "filter": "CPU utilization"
                         },
@@ -817,7 +1129,7 @@
                       "group": "alexanderzobnin-zabbix-datasource",
                       "version": "v0",
                       "datasource": {
-                        "name": "bfru7ft1mvzlsa"
+                        "name": "efrxnl2vug0e8a"
                       },
                       "spec": {
                         "application": {
@@ -867,7 +1179,7 @@
                         }
                       }
                     },
-                    "refId": "B",
+                    "refId": "A",
                     "hidden": false
                   }
                 }
@@ -950,7 +1262,7 @@
                       "group": "grafana-opensearch-datasource",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffru72qw8e9kwa"
+                        "name": "bfrxo30xoizggd"
                       },
                       "spec": {
                         "alias": "",
@@ -982,7 +1294,31 @@
                   }
                 }
               ],
-              "transformations": [],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "@timestamp": false,
+                        "_id": true,
+                        "_index": true,
+                        "_source": true,
+                        "_type": true,
+                        "collector": false,
+                        "logtag": true,
+                        "message": false,
+                        "time": true
+                      },
+                      "includeByName": {},
+                      "indexByName": {},
+                      "orderByMode": "manual",
+                      "renameByName": {}
+                    }
+                  }
+                }
+              ],
               "queryOptions": {}
             }
           },
@@ -993,11 +1329,11 @@
             "spec": {
               "options": {
                 "cellHeight": "sm",
+                "enablePagination": false,
                 "showHeader": true
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "short",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -1022,10 +1358,8 @@
                     "footer": {
                       "reducers": []
                     },
-                    "hideFrom": {
-                      "viz": false
-                    },
-                    "inspect": false
+                    "inspect": false,
+                    "wrapText": true
                   }
                 },
                 "overrides": []
@@ -1053,10 +1387,10 @@
                       "group": "grafana-opensearch-datasource",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffru72qw8e9kwa"
+                        "name": "bfrxo30xoizggd"
                       },
                       "spec": {
-                        "alias": "",
+                        "alias": "kubernetes-logs-*",
                         "bucketAggs": [
                           {
                             "field": "@timestamp",
@@ -1123,123 +1457,190 @@
       }
     },
     "layout": {
-      "kind": "GridLayout",
+      "kind": "RowsLayout",
       "spec": {
-        "items": [
+        "rows": [
           {
-            "kind": "GridLayoutItem",
+            "kind": "RowsLayoutRow",
             "spec": {
-              "x": 0,
-              "y": 0,
-              "width": 12,
-              "height": 8,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-1"
+              "title": "Visão Geral do Ambiente",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-1"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 0,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-2"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 8,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-3"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 8,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-4"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 8,
+                        "width": 8,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-5"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 16,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-6"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 16,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-7"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 24,
+                        "width": 24,
+                        "height": 14,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-8"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 38,
+                        "width": 24,
+                        "height": 14,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-9"
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             }
           },
           {
-            "kind": "GridLayoutItem",
+            "kind": "RowsLayoutRow",
             "spec": {
-              "x": 12,
-              "y": 0,
-              "width": 12,
-              "height": 8,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-2"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 0,
-              "y": 8,
-              "width": 8,
-              "height": 8,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-3"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 8,
-              "y": 8,
-              "width": 8,
-              "height": 8,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-4"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 16,
-              "y": 8,
-              "width": 8,
-              "height": 8,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-5"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 0,
-              "y": 16,
-              "width": 12,
-              "height": 8,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-6"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 12,
-              "y": 16,
-              "width": 12,
-              "height": 8,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-7"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 0,
-              "y": 24,
-              "width": 24,
-              "height": 14,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-8"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 0,
-              "y": 38,
-              "width": 24,
-              "height": 14,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-9"
+              "title": "Logs e Eventos dos Nós Kubernetes",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 12,
+                        "height": 12,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-10"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 0,
+                        "width": 12,
+                        "height": 12,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-11"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 12,
+                        "width": 24,
+                        "height": 7,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-12"
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             }
           }
