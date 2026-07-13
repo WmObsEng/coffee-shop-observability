@@ -30,6 +30,21 @@ spec:
         prometheus.io/port: "3000"
 
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: coffee-shop
+              topologyKey: kubernetes.io/hostname
+
       containers:
         - name: coffee-shop
           image: ghcr.io/wmobseng/coffee-shop-observability:sha-b45fb3d
