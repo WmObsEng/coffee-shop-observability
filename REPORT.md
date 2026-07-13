@@ -77,16 +77,19 @@ Foi criado um ServiceMonitor para que o Prometheus descubra o endpoint `/metrics
 
 Os dois targets da aplicação foram identificados corretamente pelo Prometheus.
 
-O Grafana foi configurado com três fontes de dados:
+O Grafana foi configurado com quatro fontes de dados:
 
 - Prometheus;
 - Zabbix;
-- OpenSearch.
+- OpenSearch para logs da aplicação;
+- OpenSearch para logs dos nós Kubernetes.
 
 Também foram instalados os plugins:
 
 - `alexanderzobnin-zabbix-app`;
 - `grafana-opensearch-datasource`.
+
+As fontes de dados foram utilizadas em um único dashboard para correlacionar métricas da aplicação, infraestrutura, disponibilidade, eventos e logs.
 
 ## 5. Monitoramento com Zabbix
 
@@ -142,11 +145,21 @@ O cluster foi validado com status:
 
 `green`
 
-O OpenSearch Dashboards foi configurado para consulta e análise dos logs.
+O ambiente permaneceu sem shards não alocados, utilizando um shard primário e nenhuma réplica para os índices de logs.
 
-O Fluent Bit foi implantado como DaemonSet nos workers `node-02` e `node-03`.
+O OpenSearch Dashboards foi configurado para consulta e análise centralizada dos registros.
 
-A coleta utiliza buffer em memória e envia os logs para o índice:
+O Fluent Bit foi implantado como DaemonSet nos três nós do cluster:
+
+- `node-01`;
+- `node-02`;
+- `node-03`.
+
+A coleta utiliza buffer em memória e foi dividida em dois fluxos.
+
+### Logs da aplicação Coffee Shop
+
+Os logs dos containers da Coffee Shop são coletados a partir de `/var/log/containers` e enviados para:
 
 `kubernetes-logs-*`
 
@@ -164,7 +177,40 @@ A integração foi validada com a mensagem:
 
 A mensagem foi localizada no OpenSearch Dashboards e no Grafana.
 
-Também foi criada uma política de retenção de 15 dias, permitindo preservar o histórico de logs para análise no Grafana, com acompanhamento do crescimento dos índices e do consumo de disco.
+Foi configurada uma política ISM com retenção de 15 dias para os logs da aplicação.
+
+### Logs dos nós Kubernetes
+
+O input `systemd` do Fluent Bit foi configurado para coletar registros do journald referentes aos serviços:
+
+- `k3s.service`, no control plane;
+- `k3s-agent.service`, nos workers.
+
+Foi utilizado `Read_From_Tail On` para coletar somente registros novos, evitando importar todo o histórico existente do journald.
+
+Os logs dos nós são enviados para:
+
+`kubernetes-node-logs-*`
+
+Os documentos possuem campos normalizados como:
+
+- `node_name`;
+- `service`;
+- `message`;
+- `collector: fluent-bit`;
+- `environment: observability-lab`;
+- `log_type: node`;
+- `@timestamp`.
+
+A coleta foi validada nos três servidores. Entre os eventos encontrados estavam operações internas do k3s e mensagens de image garbage collection relacionadas ao consumo de disco do `node-02`.
+
+Foi criada uma política ISM específica com retenção de 3 dias para os logs dos nós.
+
+Os templates dos dois grupos de índices utilizam:
+
+- um shard primário;
+- zero réplicas;
+- retenções separadas conforme o tipo de log.
 
 ## 7. Dashboard consolidado
 
@@ -172,7 +218,12 @@ Foi criado o dashboard:
 
 `Coffee Shop Observability`
 
-O dashboard reúne dados do Prometheus, Zabbix e OpenSearch.
+O dashboard reúne dados do Prometheus, Zabbix e das duas fontes OpenSearch.
+
+A organização foi dividida nas seguintes seções:
+
+- `Visão Geral do Ambiente`;
+- `Logs e Eventos dos Nós Kubernetes`.
 
 Os painéis apresentam:
 
@@ -181,26 +232,42 @@ Os painéis apresentam:
 - disponibilidade dos três servidores;
 - utilização de CPU;
 - utilização de memória;
-- volume de logs;
-- tabela detalhada de logs;
-- mensagens recentes da aplicação.
+- tabela detalhada de logs da aplicação;
+- mensagens recentes da Coffee Shop;
+- eventos recentes do k3s;
+- erros e alertas identificados nos logs dos nós;
+- quantidade de logs por nó.
 
-O dashboard foi exportado e versionado em:
+O painel de erros permitiu visualizar eventos relacionados ao limite de utilização do image filesystem e às tentativas de garbage collection do `node-02`.
+
+O dashboard completo foi exportado e versionado em:
 
 `grafana/coffee-shop-observability-dashboard.json`
 
+As evidências visuais foram divididas em duas imagens para preservar a legibilidade:
+
+- `docs/images/coffee-shop-observability-overview.png`;
+- `docs/images/coffee-shop-observability-logs.png`.
+
 ## 8. Dificuldades, decisões e aprendizados
 
-Durante a implantação do OpenSearch ocorreram problemas de pressão de disco nos nós do cluster.
+Durante a implantação do OpenSearch e dos demais componentes ocorreram problemas de pressão de disco nos nós do cluster, principalmente no `node-02`.
 
 Para estabilizar o ambiente foram realizadas as seguintes ações:
 
+- remoção de pods antigos em estado de falha;
 - limpeza de imagens de containers sem uso;
+- análise do consumo do containerd;
 - movimentação do OpenSearch Dashboards para outro worker;
-- execução do Fluent Bit apenas nos workers;
-- utilização de buffer em memória;
-- monitoramento do crescimento dos índices e do consumo de disco durante o período de retenção de 15 dias;
+- utilização de buffer em memória no Fluent Bit;
+- coleta seletiva apenas dos logs necessários;
+- criação de retenções separadas para aplicação e nós;
+- monitoramento do crescimento dos índices e do consumo de disco;
 - configuração dos índices sem réplicas.
+
+O Fluent Bit inicialmente executava apenas nos workers. Após a otimização do ambiente, o DaemonSet foi ampliado para os três nós, permitindo coletar `k3s.service` e `k3s-agent.service`.
+
+A centralização dos logs permitiu identificar diretamente no Grafana mensagens relacionadas ao limite de espaço do image filesystem e às tentativas de image garbage collection.
 
 O plugin de segurança do OpenSearch foi desabilitado apenas para simplificar o laboratório. Em produção seria necessário utilizar autenticação, TLS, armazenamento maior, backup e alta disponibilidade.
 
@@ -220,6 +287,17 @@ O pipeline de CI/CD está funcional, realizando o build, a publicação da image
 
 Prometheus, Zabbix, Grafana, OpenSearch, OpenSearch Dashboards e Fluent Bit permanecem operacionais e integrados.
 
+Os logs da Coffee Shop e dos três nós Kubernetes estão centralizados no OpenSearch, com índices, fontes de dados e políticas de retenção independentes.
+
+O dashboard consolidado permite correlacionar:
+
+- métricas da aplicação;
+- disponibilidade dos servidores;
+- utilização de recursos;
+- logs da Coffee Shop;
+- eventos do k3s;
+- erros e alertas dos nós.
+
 Como melhorias futuras, recomenda-se:
 
 - ampliar o armazenamento disponível para o OpenSearch;
@@ -227,11 +305,11 @@ Como melhorias futuras, recomenda-se:
 - implementar backup dos índices;
 - adicionar alta disponibilidade aos componentes críticos;
 - implementar Grafana Alerting e um Health Score consolidado;
-- ampliar a coleta para incluir logs dos nós e dos componentes internos do cluster.
+- expandir a coleta para outros componentes internos, como ingress, CoreDNS e serviços adicionais do cluster.
 
 ## Evidência visual do dashboard
 
-A imagem abaixo apresenta o dashboard consolidado no Grafana.
+As imagens abaixo apresentam o dashboard consolidado no Grafana, dividido entre a visão geral do ambiente e a área de logs dos nós.
 
 ### Visão geral do ambiente
 
