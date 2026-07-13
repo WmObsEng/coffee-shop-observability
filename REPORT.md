@@ -57,11 +57,11 @@ O endpoint abaixo também foi validado:
 
 Esse endpoint disponibiliza métricas no formato Prometheus.
 
-Foi configurado um pipeline no GitHub Actions para realizar o build e a publicação da imagem no GitHub Container Registry.
+Foi configurado um pipeline no GitHub Actions para realizar o build da aplicação, publicar a imagem no GitHub Container Registry com uma tag baseada na SHA do commit e executar automaticamente o deploy no cluster k3s.
 
 Os manifestos da aplicação estão versionados no repositório e permitem reaplicar o deploy de forma declarativa.
 
-A etapa de deploy do pipeline deve ser conferida no GitHub Actions antes da entrega final para garantir que todos os jobs foram concluídos com sucesso.
+O deploy automatizado foi validado com sucesso. Após a publicação da imagem, o pipeline conecta-se ao node-01 por SSH, aplica os manifestos com Kustomize, acompanha o rolling update e confirma que a imagem correta está executando. As duas réplicas permanecem distribuídas entre os workers node-02 e node-03.
 
 ## 4. Prometheus e Grafana
 
@@ -116,6 +116,24 @@ Foram validadas métricas como:
 
 Os três servidores ficaram disponíveis no Zabbix e enviando dados normalmente.
 
+As triggers foram disponibilizadas principalmente através do template oficial `Linux by Zabbix agent`, aplicado aos três servidores.
+
+Entre os alertas configurados e habilitados estão:
+
+- indisponibilidade do nó por ICMP;
+- indisponibilidade do Zabbix Agent;
+- espaço em disco baixo ou criticamente baixo;
+- carga média elevada;
+- alta utilização de CPU;
+- alta utilização de memória;
+- indisponibilidade do serviço SSH;
+- filesystem em modo somente leitura;
+- erros e utilização elevada das interfaces de rede.
+
+Também foi configurada uma verificação específica para a disponibilidade da porta SSH em cada servidor.
+
+As triggers utilizam diferentes níveis de severidade, permitindo acompanhar problemas de disponibilidade, desempenho e capacidade.
+
 ## 6. OpenSearch e Fluent Bit
 
 O OpenSearch foi instalado em modo single-node devido aos limites de disco e recursos do laboratório.
@@ -146,7 +164,7 @@ A integração foi validada com a mensagem:
 
 A mensagem foi localizada no OpenSearch Dashboards e no Grafana.
 
-Também foi criada uma política de retenção de um dia para reduzir o crescimento dos índices.
+Também foi criada uma política de retenção de 15 dias, permitindo preservar o histórico de logs para análise no Grafana, com acompanhamento do crescimento dos índices e do consumo de disco.
 
 ## 7. Dashboard consolidado
 
@@ -181,7 +199,7 @@ Para estabilizar o ambiente foram realizadas as seguintes ações:
 - movimentação do OpenSearch Dashboards para outro worker;
 - execução do Fluent Bit apenas nos workers;
 - utilização de buffer em memória;
-- redução da retenção dos logs;
+- monitoramento do crescimento dos índices e do consumo de disco durante o período de retenção de 15 dias;
 - configuração dos índices sem réplicas.
 
 O plugin de segurança do OpenSearch foi desabilitado apenas para simplificar o laboratório. Em produção seria necessário utilizar autenticação, TLS, armazenamento maior, backup e alta disponibilidade.
@@ -191,6 +209,25 @@ Minha experiência anterior é principalmente com Zabbix e Grafana.
 Durante este desafio aprofundei conhecimentos em Kubernetes, k3s, Ansible, Helm, Prometheus, OpenSearch, Fluent Bit e CI/CD.
 
 Foram utilizadas documentação, pesquisa e ferramentas de IA como apoio, mas cada etapa foi executada, analisada e validada diretamente no ambiente.
+
+## 9. Status atual e recomendações futuras
+
+O projeto foi desenvolvido e validado ao longo de aproximadamente três dias, incluindo a preparação da infraestrutura, implantação da aplicação e integração da stack de observabilidade.
+
+Atualmente, os três nós do cluster k3s estão disponíveis. A aplicação Coffee Shop executa com duas réplicas distribuídas entre os workers `node-02` e `node-03`, responde via NodePort e publica métricas no endpoint `/metrics`.
+
+O pipeline de CI/CD está funcional, realizando o build, a publicação da imagem no GHCR e o deploy automático no cluster, com validação do rolling update e da imagem baseada na SHA do commit.
+
+Prometheus, Zabbix, Grafana, OpenSearch, OpenSearch Dashboards e Fluent Bit permanecem operacionais e integrados.
+
+Como melhorias futuras, recomenda-se:
+
+- ampliar o armazenamento disponível para o OpenSearch;
+- habilitar autenticação e TLS;
+- implementar backup dos índices;
+- adicionar alta disponibilidade aos componentes críticos;
+- implementar Grafana Alerting e um Health Score consolidado;
+- ampliar a coleta para incluir logs dos nós e dos componentes internos do cluster.
 
 ## Evidência visual do dashboard
 
