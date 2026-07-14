@@ -222,7 +222,7 @@ O dashboard reúne dados do Prometheus, Zabbix e das duas fontes OpenSearch.
 
 A organização foi dividida nas seguintes seções:
 
-- `Visão Geral do Ambiente`;
+- `Saúde e Capacidade do Ambiente`;
 - `Logs e Eventos dos Nós Kubernetes`.
 
 Os painéis apresentam:
@@ -232,6 +232,7 @@ Os painéis apresentam:
 - disponibilidade dos três servidores;
 - utilização de CPU;
 - utilização de memória;
+- utilização de espaço em disco dos três servidores;
 - tabela detalhada de logs da aplicação;
 - mensagens recentes da Coffee Shop;
 - eventos recentes do k3s;
@@ -294,6 +295,7 @@ O dashboard consolidado permite correlacionar:
 - métricas da aplicação;
 - disponibilidade dos servidores;
 - utilização de recursos;
+- utilização de espaço em disco dos servidores;
 - logs da Coffee Shop;
 - eventos do k3s;
 - erros e alertas dos nós.
@@ -309,11 +311,11 @@ Como melhorias futuras, recomenda-se:
 
 ## Evidência visual do dashboard
 
-As imagens abaixo apresentam o dashboard consolidado no Grafana, dividido entre a visão geral do ambiente e a área de logs dos nós.
+As imagens abaixo apresentam o dashboard consolidado no Grafana, dividido entre a seção de saúde e capacidade do ambiente e a área de logs dos nós.
 
-### Visão geral do ambiente
+### Saúde e capacidade do ambiente
 
-![Coffee Shop Observability - Visão Geral](docs/images/coffee-shop-observability-overview.png)
+![Coffee Shop Observability - Saúde e Capacidade do Ambiente](docs/images/coffee-shop-observability-overview.png)
 
 ### Logs e eventos dos nós Kubernetes
 
